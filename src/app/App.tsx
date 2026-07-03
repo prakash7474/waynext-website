@@ -1,12 +1,17 @@
 import { useState, useEffect, useCallback } from "react";
+import { Routes, Route, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Menu, X, Phone, Mail, MapPin, Star, ArrowRight,
   MessageCircle, Instagram, Facebook, ChevronRight,
 } from "lucide-react";
 import LogoAnimation from "@/components/LogoAnimation";
+import EventsPage from "@/pages/EventsPage";
+import MoversPage from "@/pages/MoversPage";
+import FuneralPage from "@/pages/FuneralPage";
 import vikramImg from "@/imports/vikram.jpg";
 import rajeshImg from "@/imports/rajesh.jpg";
+import image from "@/imports/image.png";
 
 const serif = { fontFamily: "'DM Serif Display', serif" };
 const inter = { fontFamily: "'Inter', sans-serif" };
@@ -39,15 +44,6 @@ const services = [
       "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=700&h=520&fit=crop&auto=format",
   },
   {
-    id: "cleaning",
-    title: "CLEANING",
-    subtitle: "Deep Cleaning · Houses · Offices · Contract Basis",
-    desc: "Deep cleaning for houses, offices, and flats — one-time or contract basis, spotless results guaranteed.",
-    color: "#000",
-    image:
-      "https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=700&h=520&fit=crop&auto=format",
-  },
-  {
     id: "funeral",
     title: "FUNERAL",
     subtitle: "24/7 Emergency · Freezer Box · Manpower · Vehicles",
@@ -61,7 +57,7 @@ const services = [
 const stats = [
   { value: 250, suffix: "+", label: "Happy Clients" },
   { value: 1, suffix: "", label: "Year Experience" },
-  { value: 4, suffix: "", label: "Professional Services" },
+  { value: 3, suffix: "", label: "Professional Services" },
   { value: 24, suffix: "/7", label: "Emergency Support" },
 ];
 
@@ -157,7 +153,7 @@ function useCountUp(target: number, duration: number, trigger: boolean) {
   return count;
 }
 
-function ServiceCard({ s, index }: { s: typeof services[0]; index: number }) {
+function ServiceCard({ s, index, onNavigate }: { s: typeof services[0]; index: number; onNavigate: (path: string) => void }) {
   return (
     <motion.div
       className="group relative rounded-2xl overflow-hidden cursor-pointer"
@@ -166,12 +162,13 @@ function ServiceCard({ s, index }: { s: typeof services[0]; index: number }) {
       whileInView="visible"
       viewport={{ once: true, margin: "-60px" }}
       transition={{ delay: index * 0.1 }}
+      onClick={() => onNavigate(`/${s.id}`)}
     >
       <div className="aspect-[4/5] md:aspect-[3/4] relative">
         <img
-          src={s.image}
+          src={image}
           alt={s.title}
-          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+          
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
         <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8">
@@ -227,6 +224,19 @@ export default function App() {
   const [showIntro, setShowIntro] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
   const [testimonialIndex, setTestimonialIndex] = useState(0);
+  const [overlayState, setOverlayState] = useState<'idle' | 'slide-in' | 'slide-out'>('idle');
+  const navigate = useNavigate();
+
+  const navigateWithTransition = useCallback((path: string) => {
+    setOverlayState('slide-in');
+    setTimeout(() => {
+      navigate(path);
+      setTimeout(() => {
+        setOverlayState('slide-out');
+        setTimeout(() => setOverlayState('idle'), 700);
+      }, 80);
+    }, 500);
+  }, [navigate]);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -241,17 +251,21 @@ export default function App() {
     if (el) el.scrollIntoView({ behavior: "smooth" });
   }, []);
 
+  const location = useLocation();
+
   return (
     <div className="min-h-screen" style={{ background: "#fff", ...inter }}>
       {showIntro && <LogoAnimation onComplete={() => setShowIntro(false)} />}
 
       <a
-        href="tel:+918098468061"
+        href="https://wa.me/917708677454"
+        target="_blank"
+        rel="noopener noreferrer"
         className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full flex items-center justify-center shadow-2xl transition-transform hover:scale-110"
         style={{ background: "#25D366" }}
-        title="Call Us Now"
+        title="Chat on WhatsApp"
       >
-        <Phone size={24} color="#fff" />
+        <MessageCircle size={24} color="#fff" />
       </a>
 
       <nav
@@ -263,13 +277,8 @@ export default function App() {
         }}
       >
         <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
-          <a href="#home" onClick={() => scrollTo("home")} className="flex items-center gap-3">
-            <div
-              className="w-9 h-9 rounded-xl flex items-center justify-center font-bold text-sm"
-              style={{ background: "#000", color: "#fff", ...serif }}
-            >
-              W
-            </div>
+          <a href="/" onClick={(e) => { e.preventDefault(); navigate("/"); }} className="flex items-center gap-3">
+            <img src={image} alt="WayNex360" className="w-9 h-9 rounded-xl object-cover" />
             <div>
               <div className="text-base font-bold leading-none" style={{ ...serif, color: "#000" }}>
                 WayNex360
@@ -341,8 +350,27 @@ export default function App() {
         )}
       </nav>
 
-      {}
-      <section id="home" className="min-h-screen flex items-center pt-16" style={{ background: "#fff" }}>
+      <AnimatePresence>
+        {overlayState !== 'idle' && (
+          <motion.div
+            className="fixed inset-0 z-50 bg-black"
+            initial={{ y: '100%' }}
+            animate={{ y: overlayState === 'slide-in' ? 0 : '-100%' }}
+            exit={{ y: '-100%' }}
+            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+            onAnimationComplete={() => {
+              if (overlayState === 'slide-out') {
+                setTimeout(() => setOverlayState('idle'), 100);
+              }
+            }}
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence mode="wait">
+        <Routes location={location} key={location.pathname}>
+          <Route path="/" element={<>
+            <section id="home" className="min-h-screen flex items-center pt-16" style={{ background: "#fff" }}>
         <div className="max-w-7xl mx-auto px-6 w-full">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <motion.div
@@ -351,11 +379,6 @@ export default function App() {
               transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: 0.2 }}
             >
               <div className="flex items-center gap-3 mb-8">
-                <svg viewBox="0 0 1024 1024" style={{ width: 40, height: 40 }}>
-                  <path fill="#000" d="M470.166687,614.151062 C469.037079,617.341064 469.347351,621.071533 464.720032,621.153137 C459.999176,621.236389 455.233276,619.384338 454.047699,615.517212 C449.618408,601.069885 446.200897,586.311157 443.587494,571.396729 C443.538422,571.116638 443.790680,570.783691 443.904663,570.476196 C452.560577,567.697083 456.838104,570.308533 459.207001,579.535400 C460.145599,583.191101 460.724976,586.939026 462.386993,590.839417 C463.262421,587.936279 464.109741,585.024231 465.020691,582.132263 C466.072845,578.791870 467.188629,575.447998 469.413818,572.677673 C471.204987,570.447693 473.791016,567.505249 476.292419,568.772217 C478.865417,570.075439 481.294037,572.909241 482.072723,576.306763 C483.180176,581.138672 483.946838,586.086304 487.147156,591.248474 C490.753967,581.806946 489.906036,569.750488 502.510864,568.071106 C509.765656,574.001404 505.982605,580.333435 504.521637,586.532593 C502.231995,596.247986 500.039703,605.986511 497.717255,615.693970 C496.484009,620.848755 492.687683,623.131409 488.188599,620.760315 C485.012970,619.086731 481.611420,617.195679 480.668549,612.789124 C479.565033,607.631775 477.700256,602.637329 475.968842,596.922363 C472.701324,601.055237 467.768677,603.340088 468.601562,609.980896 C469.580292,608.128662 470.249969,606.861267 471.510468,604.475769 C472.442230,608.522339 471.058319,611.113159 470.166687,614.151062 z"/>
-                  <path fill="#000" d="M598.060242,571.422241 C603.812134,568.165344 608.161987,568.829834 611.571777,573.464050 C616.481140,580.136230 621.156860,586.980225 626.299316,594.271423 C628.324341,591.349121 627.558960,588.491211 627.579956,585.875305 C627.616516,581.308411 627.979492,576.858276 630.654541,572.982117 C632.301208,570.595947 635.068542,567.568604 637.324890,568.750122 C639.733826,570.011658 642.866760,572.495850 642.870728,576.256714 C642.875305,580.578430 642.754700,584.904297 642.546387,589.221497 C642.129883,597.853027 643.064209,606.482605 642.327942,615.127380 C641.837341,620.888428 638.849426,623.205505 633.619751,620.607971 C630.753601,619.184448 627.933594,617.430847 626.029907,614.409363 C621.814514,607.718506 617.236267,601.256287 612.805969,594.700867 C612.378418,594.846741 611.950928,594.992615 611.523376,595.138489 C611.909302,597.474731 612.370544,599.801575 612.666321,602.149231 C613.417236,608.110779 612.775574,613.804382 608.898743,618.696960 C607.531799,620.422058 604.838989,622.633545 603.607422,621.398743 C601.586121,619.372070 597.469543,619.460876 597.605957,614.793640 C598.023926,600.491028 597.851501,586.171204 598.060242,571.422241 z"/>
-                  <circle fill="#000" cx="862" cy="598" r="28"/>
-                </svg>
                 <div>
                   <div className="text-2xl font-bold" style={{ ...serif, color: "#000" }}>
                     WayNex360
@@ -414,12 +437,32 @@ export default function App() {
             >
               <div className="relative rounded-2xl overflow-hidden">
                 <div className="grid grid-cols-2 gap-2">
-                  <div className="rounded-xl overflow-hidden">
-                    <img src={vikramImg} alt="Vikram - Founder" className="w-full h-full object-cover" />
-                  </div>
-                  <div className="rounded-xl overflow-hidden">
-                    <img src={rajeshImg} alt="Rajasekaran - Co-Founder" className="w-full h-full object-cover" />
-                  </div>
+                  <motion.div
+                    className="rounded-xl overflow-hidden"
+                    whileHover={{ scale: 1.04 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 12 }}
+                  >
+                    <motion.img
+                      src={vikramImg}
+                      alt="Vikram - Founder"
+                      className="w-full h-full object-cover"
+                      animate={{ y: [0, -6, 0] }}
+                      transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+                    />
+                  </motion.div>
+                  <motion.div
+                    className="rounded-xl overflow-hidden"
+                    whileHover={{ scale: 1.04 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 12 }}
+                  >
+                    <motion.img
+                      src={rajeshImg}
+                      alt="Rajasekaran - Co-Founder"
+                      className="w-full h-full object-cover"
+                      animate={{ y: [0, -6, 0] }}
+                      transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+                    />
+                  </motion.div>
                 </div>
               </div>
 
@@ -462,12 +505,32 @@ export default function App() {
             >
               <div className="rounded-2xl overflow-hidden aspect-[4/3]">
                 <div className="grid grid-cols-2 h-full gap-2">
-                  <div className="rounded-xl overflow-hidden">
-                    <img src={vikramImg} alt="Vikram" className="w-full h-full object-cover" />
-                  </div>
-                  <div className="rounded-xl overflow-hidden">
-                    <img src={rajeshImg} alt="Rajasekaran" className="w-full h-full object-cover" />
-                  </div>
+                  <motion.div
+                    className="rounded-xl overflow-hidden"
+                    whileHover={{ scale: 1.04 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 12 }}
+                  >
+                    <motion.img
+                      src={vikramImg}
+                      alt="Vikram"
+                      className="w-full h-full object-cover"
+                      animate={{ y: [0, -6, 0] }}
+                      transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+                    />
+                  </motion.div>
+                  <motion.div
+                    className="rounded-xl overflow-hidden"
+                    whileHover={{ scale: 1.04 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 12 }}
+                  >
+                    <motion.img
+                      src={rajeshImg}
+                      alt="Rajasekaran"
+                      className="w-full h-full object-cover"
+                      animate={{ y: [0, -6, 0] }}
+                      transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+                    />
+                  </motion.div>
                 </div>
               </div>
             </motion.div>
@@ -531,11 +594,11 @@ export default function App() {
       {}
       <section id="services" className="py-24 md:py-32" style={{ background: "#fff" }}>
         <div className="max-w-7xl mx-auto px-6">
-          <SectionHeader label="Our Services" title="4 Core Services" />
+          <SectionHeader label="Our Services" title="3 Core Services" />
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {services.map((s, i) => (
-              <ServiceCard key={s.id} s={s} index={i} />
+              <ServiceCard key={s.id} s={s} index={i} onNavigate={navigateWithTransition} />
             ))}
           </div>
         </div>
@@ -632,13 +695,19 @@ export default function App() {
                 viewport={{ once: true, margin: "-60px" }}
                 transition={{ delay: i * 0.15 }}
               >
-                <div className="aspect-[4/3] overflow-hidden">
-                  <img
+                <motion.div
+                  className="aspect-[4/3] overflow-hidden"
+                  whileHover={{ scale: 1.04 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 12 }}
+                >
+                  <motion.img
                     src={member.img}
                     alt={member.name}
                     className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500"
+                    animate={{ y: [0, -5, 0] }}
+                    transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: i * 0.3 }}
                   />
-                </div>
+                </motion.div>
                 <div className="p-6">
                   <h3 className="text-xl font-bold mb-1" style={{ ...serif, color: "#000" }}>
                     {member.name}
@@ -767,19 +836,18 @@ export default function App() {
           </motion.div>
         </div>
       </section>
-
-      {}
+          </>} />
+          <Route path="/events" element={<EventsPage />} />
+          <Route path="/movers" element={<MoversPage />} />
+          <Route path="/funeral" element={<FuneralPage />} />
+        </Routes>
+      </AnimatePresence>
       <footer style={{ background: "#000", color: "#fff" }}>
         <div className="max-w-7xl mx-auto px-6 py-16">
           <div className="grid md:grid-cols-3 gap-12 mb-12">
             <div>
               <div className="flex items-center gap-3 mb-4">
-                <div
-                  className="w-9 h-9 rounded-xl flex items-center justify-center font-bold text-sm"
-                  style={{ background: "#fff", color: "#000", ...serif }}
-                >
-                  W
-                </div>
+                <img src={image} alt="WayNex360" className="w-9 h-9 rounded-xl object-cover" />
                 <div>
                   <div className="font-bold" style={{ ...serif, color: "#fff" }}>
                     WayNex360 Pro
