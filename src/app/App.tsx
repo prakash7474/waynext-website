@@ -225,18 +225,22 @@ export default function App() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [testimonialIndex, setTestimonialIndex] = useState(0);
   const [overlayState, setOverlayState] = useState<'idle' | 'slide-in' | 'slide-out'>('idle');
+  const [igOpen, setIgOpen] = useState(false);
   const navigate = useNavigate();
 
   const navigateWithTransition = useCallback((path: string) => {
     setOverlayState('slide-in');
     setTimeout(() => {
       navigate(path);
+      window.scrollTo(0, 0);
       setTimeout(() => {
         setOverlayState('slide-out');
         setTimeout(() => setOverlayState('idle'), 700);
       }, 80);
     }, 500);
   }, [navigate]);
+
+  const location = useLocation();
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -245,13 +249,26 @@ export default function App() {
     return () => clearInterval(timer);
   }, []);
 
+  useEffect(() => {
+    const id = (location.state as { scrollTo?: string })?.scrollTo;
+    if (id) {
+      const el = document.getElementById(id);
+      if (el) {
+        setTimeout(() => el.scrollIntoView({ behavior: "smooth" }), 100);
+      }
+      window.history.replaceState({}, "");
+    }
+  }, [location]);
+
   const scrollTo = useCallback((id: string) => {
     setMenuOpen(false);
-    const el = document.getElementById(id);
-    if (el) el.scrollIntoView({ behavior: "smooth" });
-  }, []);
-
-  const location = useLocation();
+    if (location.pathname === "/") {
+      const el = document.getElementById(id);
+      if (el) el.scrollIntoView({ behavior: "smooth" });
+    } else {
+      navigate("/", { state: { scrollTo: id } });
+    }
+  }, [location.pathname, navigate]);
 
   return (
     <div className="min-h-screen" style={{ background: "#fff", ...inter }}>
@@ -294,7 +311,7 @@ export default function App() {
               <a
                 key={link.label}
                 href={link.href}
-                onClick={() => scrollTo(link.href.slice(1))}
+                onClick={(e) => { e.preventDefault(); scrollTo(link.href.slice(1)); }}
                 className="text-sm font-medium tracking-wide transition-colors hover:text-black/60"
                 style={{ color: "#6B7280" }}
               >
@@ -332,7 +349,7 @@ export default function App() {
               <a
                 key={link.label}
                 href={link.href}
-                onClick={() => scrollTo(link.href.slice(1))}
+                onClick={(e) => { e.preventDefault(); scrollTo(link.href.slice(1)); }}
                 className="text-base py-2 border-b font-medium transition-colors"
                 style={{ color: "#000", borderColor: "rgba(0,0,0,0.06)" }}
               >
@@ -782,7 +799,7 @@ export default function App() {
       </section>
 
       {}
-      <section className="py-24 md:py-32 relative overflow-hidden" style={{ background: "#111" }}>
+      <section id="contact" className="py-24 md:py-32 relative overflow-hidden" style={{ background: "#111" }}>
         <div className="absolute inset-0 opacity-[0.04]"
           style={{
             backgroundImage: "repeating-linear-gradient(45deg, #fff 0, #fff 1px, transparent 0, transparent 50%)",
@@ -861,16 +878,40 @@ export default function App() {
                 Serving families and businesses across Kanyakumari and Nagercoil with pride,
                 professionalism, and 24/7 dedication.
               </p>
-              <div className="flex gap-3">
-                <a
-                  href="https://instagram.com/waynex360"
-                  target="_blank"
-                  rel="noopener noreferrer"
+              <div className="flex gap-3 relative">
+                <button
+                  onClick={() => setIgOpen(!igOpen)}
+                  onBlur={() => setTimeout(() => setIgOpen(false), 200)}
                   className="w-9 h-9 rounded-full flex items-center justify-center transition-all hover:opacity-70"
                   style={{ background: "rgba(255,255,255,0.1)" }}
                 >
                   <Instagram size={16} />
-                </a>
+                </button>
+                {igOpen && (
+                  <div
+                    className="absolute bottom-full left-0 mb-2 rounded-xl overflow-hidden shadow-xl border"
+                    style={{ background: "#fff", borderColor: "rgba(0,0,0,0.06)" }}
+                  >
+                    <a
+                      href="https://instagram.com/waynex_360"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block px-4 py-2.5 text-sm font-medium transition-colors hover:bg-gray-100"
+                      style={{ color: "#000" }}
+                    >
+                      WayNex 360
+                    </a>
+                    <a
+                      href="https://instagram.com/waynex_360_pro"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block px-4 py-2.5 text-sm font-medium transition-colors hover:bg-gray-100 border-t"
+                      style={{ color: "#000", borderColor: "rgba(0,0,0,0.06)" }}
+                    >
+                      WayNex 360 Pro
+                    </a>
+                  </div>
+                )}
                 <a
                   href="https://wa.me/918098468061"
                   target="_blank"
@@ -933,7 +974,7 @@ export default function App() {
                   <li key={l}>
                     <a
                       href={`#${l.toLowerCase()}`}
-                      onClick={() => scrollTo(l.toLowerCase())}
+                      onClick={(e) => { e.preventDefault(); scrollTo(l.toLowerCase()); }}
                       className="text-sm transition-all hover:opacity-70"
                       style={{ color: "rgba(255,255,255,0.7)" }}
                     >
