@@ -5,6 +5,7 @@ import {
   Menu, X, Phone, Mail, MapPin, Star, ArrowRight,
   MessageCircle, Instagram, Facebook, ChevronRight,
 } from "lucide-react";
+import { SpeedInsights } from "@vercel/speed-insights/react";
 import LogoAnimation from "@/components/LogoAnimation";
 import EventsPage from "@/pages/EventsPage";
 import MoversPage from "@/pages/MoversPage";
@@ -999,6 +1000,7 @@ export default function App() {
           </div>
         </div>
       </footer>
+      <SpeedInsights />
     </div>
   );
 }
